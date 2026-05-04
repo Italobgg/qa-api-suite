@@ -63,20 +63,3 @@ test.describe('👥 Users API', () => {
   });
 
 });
-
-/* # Adicionar apenas os novos arquivos
-git add tests/users.spec.ts
-
-# Commit perfeito para recrutador
-git commit -m "feat: testes completos para endpoint /users
-
-- GET /users → validação de 10 usuários + schema
-- GET /users/1 → validação específica do usuário Leanne Graham
-- GET /users → filtro por email do Google (2 usuários)
-- GET /users/99 → teste negativo 404
-- GET /users → validação de empresa para todos os usuários
-
-Agora temos 11 testes passando ✅"
-
-# Push
-git push */

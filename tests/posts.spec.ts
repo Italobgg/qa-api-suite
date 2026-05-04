@@ -1,65 +1,91 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('👥 Users API', () => {
-
-  test('GET /users → deve retornar 10 usuários', async ({ request }) => {
-    const response = await request.get('/users');
-
+test.describe("📝 Posts API", () => {
+  test("GET /posts → deve retornar 100 posts", async ({ request }) => {
+    const response = await request.get("/posts");
     expect(response.status()).toBe(200);
 
-    const body = await response.json();
-    expect(body).toHaveLength(10);
-    
-    body.forEach((user: any) => {
-      expect(user).toHaveProperty('id');
-      expect(user).toHaveProperty('name');
-      expect(user).toHaveProperty('email');
-      expect(user).toHaveProperty('phone');
-      expect(typeof user.id).toBe('number');
-    });
+    const posts = await response.json();
+    expect(posts).toHaveLength(100);
   });
 
-  test('GET /users/1 → deve retornar usuário Leanne Graham', async ({ request }) => {
-    const response = await request.get('/users/1');
-
+  test("GET /posts/1 → deve retornar primeiro post", async ({ request }) => {
+    const response = await request.get("/posts/1");
     expect(response.status()).toBe(200);
 
-    const user = await response.json();
-    expect(user).toMatchObject({
+    const post = await response.json();
+    expect(post).toMatchObject({
       id: 1,
-      name: 'Leanne Graham',
-      username: 'Bret',
-      email: 'Sincere@april.biz',
+      userId: 1,
+      title: expect.stringContaining("sunt aut"),
+      body: expect.stringContaining("quia et"),
     });
   });
 
-  test('GET /users → deve validar formato de email de todos os usuários', async ({ request }) => {
-    const response = await request.get('/users');
-    const users = await response.json();
+  test("GET /posts → todos os posts têm userId", async ({ request }) => {
+    const response = await request.get("/posts");
+    const posts = await response.json();
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    users.forEach((user: any) => {
-      expect(user.email).toMatch(emailRegex);
+    posts.forEach((post: any) => {
+      expect(post).toHaveProperty("userId");
+      expect(typeof post.userId).toBe("number");
     });
-
-    const domains = users.map((u: any) => u.email.split('@')[1]);
-    expect(new Set(domains).size).toBeGreaterThan(1);
   });
 
-  test('GET /users/99 → usuário inexistente deve retornar 404', async ({ request }) => {
-    const response = await request.get('/users/99');
+  test("GET /posts/101 → post inexistente retorna 404", async ({ request }) => {
+    const response = await request.get("/posts/101");
     expect(response.status()).toBe(404);
   });
 
-  test('GET /users → deve validar que todos têm empresa', async ({ request }) => {
-    const response = await request.get('/users');
-    const users = await response.json();
+  test("GET /posts → deve ter títulos únicos", async ({ request }) => {
+    const response = await request.get("/posts");
+    const posts = await response.json();
 
-    users.forEach((user: any) => {
-      expect(user).toHaveProperty('company');
-      expect(user.company).toHaveProperty('name');
+    const titles = posts.map((p: any) => p.title);
+    const uniqueTitles = new Set(titles);
+    expect(uniqueTitles.size).toBe(posts.length);
+  });
+
+  test("GET /posts → deve ter corpos de texto", async ({ request }) => {
+    const response = await request.get("/posts");
+    const posts = await response.json();
+
+    posts.forEach((post: any) => {
+      expect(post.body).toBeDefined();
+      expect(post.body.length).toBeGreaterThan(10);
     });
   });
 
+  test("GET /posts → validação de schema completo", async ({ request }) => {
+    const response = await request.get("/posts");
+    const posts = await response.json();
+
+    posts.forEach((post: any) => {
+      expect(post).toHaveProperty("id");
+      expect(post).toHaveProperty("userId");
+      expect(post).toHaveProperty("title");
+      expect(post).toHaveProperty("body");
+
+      expect(typeof post.id).toBe("number");
+      expect(typeof post.userId).toBe("number");
+      expect(typeof post.title).toBe("string");
+      expect(typeof post.body).toBe("string");
+    });
+  });
+
+  test("GET /posts → posts agrupados por userId", async ({ request }) => {
+    const response = await request.get("/posts");
+    const posts = await response.json();
+
+    const userPostCount: Record<number, number> = posts.reduce(
+      (acc: Record<number, number>, post: any) => {
+        acc[post.userId] = (acc[post.userId] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
+
+    expect(Object.keys(userPostCount).length).toBe(10);
+    expect(Math.max(...(Object.values(userPostCount) as number[]))).toBe(10); // ← MUDOU 12 → 10
+  });
 });
