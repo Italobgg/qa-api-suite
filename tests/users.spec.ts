@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { createApiHelper } from '../helpers/api.helper';
 
 test.describe('👥 Users API', () => {
-
   test('GET /users → deve retornar 10 usuários', async ({ request }) => {
-    const response = await request.get('/users');
-
-    expect(response.status()).toBe(200);
-
-    const body = await response.json();
-    expect(body).toHaveLength(10);
+    const api = createApiHelper(request);
+    const response = await api.getUser(1); // ou request.get('/users') direto
     
+    const body = await request.get('/users').then(r => r.json());
+    expect(body).toHaveLength(10);
+
     body.forEach((user: any) => {
       expect(user).toHaveProperty('id');
       expect(user).toHaveProperty('name');
@@ -20,10 +19,10 @@ test.describe('👥 Users API', () => {
   });
 
   test('GET /users/1 → deve retornar usuário Leanne Graham', async ({ request }) => {
-    const response = await request.get('/users/1');
+    const api = createApiHelper(request);
+    const response = await api.getUser(1);
 
     expect(response.status()).toBe(200);
-
     const user = await response.json();
     expect(user).toMatchObject({
       id: 1,
@@ -33,12 +32,11 @@ test.describe('👥 Users API', () => {
     });
   });
 
-  test('GET /users → deve validar formato de email de todos os usuários', async ({ request }) => {
+  test('GET /users → deve validar formato de email', async ({ request }) => {
     const response = await request.get('/users');
     const users = await response.json();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     users.forEach((user: any) => {
       expect(user.email).toMatch(emailRegex);
     });
@@ -47,7 +45,7 @@ test.describe('👥 Users API', () => {
     expect(new Set(domains).size).toBeGreaterThan(1);
   });
 
-  test('GET /users/99 → usuário inexistente deve retornar 404', async ({ request }) => {
+  test('GET /users/99 → usuário inexistente retorna 404', async ({ request }) => {
     const response = await request.get('/users/99');
     expect(response.status()).toBe(404);
   });
@@ -61,5 +59,4 @@ test.describe('👥 Users API', () => {
       expect(user.company).toHaveProperty('name');
     });
   });
-
 });
