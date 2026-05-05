@@ -1,0 +1,130 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: comments.spec.ts >> 💬 Comments API >> GET /comments → IDs sequenciais de 1 a 500
+- Location: tests\comments.spec.ts:119:7
+
+# Error details
+
+```
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 1
+Received: undefined
+```
+
+# Test source
+
+```ts
+  27  | 
+  28  |   test("GET /comments → todos têm postId, name, email, body", async ({
+  29  |     request,
+  30  |   }) => {
+  31  |     const response = await request.get("/comments");
+  32  |     const comments = await response.json();
+  33  | 
+  34  |     comments.forEach((comment: any) => {
+  35  |       expect(comment).toHaveProperty("id");
+  36  |       expect(comment).toHaveProperty("postId");
+  37  |       expect(comment).toHaveProperty("name");
+  38  |       expect(comment).toHaveProperty("email");
+  39  |       expect(comment).toHaveProperty("body");
+  40  | 
+  41  |       expect(typeof comment.id).toBe("number");
+  42  |       expect(typeof comment.postId).toBe("number");
+  43  |       expect(typeof comment.name).toBe("string");
+  44  |       expect(typeof comment.email).toBe("string");
+  45  |       expect(typeof comment.body).toBe("string");
+  46  |     });
+  47  |   });
+  48  | 
+  49  |   test("GET /comments/501 → comentário inexistente retorna 404", async ({
+  50  |     request,
+  51  |   }) => {
+  52  |     const response = await request.get("/comments/501");
+  53  |     expect(response.status()).toBe(404);
+  54  |   });
+  55  | 
+  56  |   test("GET /comments → validar formato de email", async ({ request }) => {
+  57  |     const response = await request.get("/comments");
+  58  |     const comments = await response.json();
+  59  | 
+  60  |     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  61  | 
+  62  |     comments.forEach((comment: any) => {
+  63  |       expect(comment.email).toMatch(emailRegex);
+  64  |     });
+  65  |   });
+  66  | 
+  67  |   test("GET /comments → comentários agrupados por postId", async ({
+  68  |     request,
+  69  |   }) => {
+  70  |     const response = await request.get("/comments");
+  71  |     const comments = await response.json();
+  72  | 
+  73  |     const commentsByPost: Record<number, number> = comments.reduce(
+  74  |       (acc: Record<number, number>, comment: any) => {
+  75  |         acc[comment.postId] = (acc[comment.postId] || 0) + 1;
+  76  |         return acc;
+  77  |       },
+  78  |       {},
+  79  |     );
+  80  | 
+  81  |     expect(Object.keys(commentsByPost).length).toBe(100);
+  82  |     expect(Math.max(...(Object.values(commentsByPost) as number[]))).toBe(5);
+  83  |   });
+  84  | 
+  85  |   test("GET /comments → corpos de texto > 10 caracteres", async ({
+  86  |     request,
+  87  |   }) => {
+  88  |     const response = await request.get("/comments");
+  89  |     const comments = await response.json();
+  90  | 
+  91  |     comments.forEach((comment: any) => {
+  92  |       expect(comment.body.length).toBeGreaterThan(10);
+  93  |     });
+  94  |   });
+  95  | 
+  96  |   test("GET /comments?postId=1 → filtrar comentários por post", async ({
+  97  |     request,
+  98  |   }) => {
+  99  |     const response = await request.get("/comments?postId=1");
+  100 |     expect(response.status()).toBe(200);
+  101 | 
+  102 |     const comments = await response.json();
+  103 |     expect(comments.length).toBe(5);
+  104 | 
+  105 |     comments.forEach((comment: any) => {
+  106 |       expect(comment.postId).toBe(1);
+  107 |     });
+  108 |   });
+  109 | 
+  110 |   test("GET /comments → nomes não vazios", async ({ request }) => {
+  111 |     const response = await request.get("/comments");
+  112 |     const comments = await response.json();
+  113 | 
+  114 |     comments.forEach((comment: any) => {
+  115 |       expect(comment.name.trim().length).toBeGreaterThan(0);
+  116 |     });
+  117 |   });
+  118 | 
+  119 |   test("GET /comments → IDs sequenciais de 1 a 500", async ({ request }) => {
+  120 |     const response = await request.get("/comments");
+  121 |     const comments = await response.json();
+  122 | 
+  123 |     comments.forEach((comment: any, index: number) => {
+  124 |       expect(comment.id).toBe(index + 1);
+  125 |     });
+  126 | 
+> 127 |     expect(comments.id).toBe(1); // ✅ Primeiro elemento
+      |                         ^ Error: expect(received).toBe(expected) // Object.is equality
+  128 |     expect(comments.id).toBe(500); // ✅ Último elemento
+  129 |   });
+  130 | });
+  131 | 
+```
