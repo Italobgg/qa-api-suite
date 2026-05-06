@@ -1,8 +1,20 @@
 import { test, expect } from '@playwright/test';
-import { createApiHelper } from '../helpers/api.helper';
+import { allure } from 'allure-playwright';
+import { createApiHelper } from '../src/apiHelper';
 
 test.describe('📝 Posts API', () => {
+  test.beforeEach(async () => {
+    allure.epic('API Tests');
+    allure.feature('Posts');
+  });
+
   test('GET /posts → deve retornar 100 posts', async ({ request }) => {
+    allure.story('Listagem de posts');
+    allure.severity('critical');
+    allure.tag('smoke');
+    allure.tag('GET');
+    allure.description('Valida que o endpoint /posts retorna a lista completa de 100 posts.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
 
@@ -12,6 +24,12 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts/1 → deve retornar primeiro post', async ({ request }) => {
+    allure.story('Busca de post por ID');
+    allure.severity('critical');
+    allure.tag('smoke');
+    allure.tag('GET');
+    allure.description('Valida que o endpoint /posts/1 retorna o post correto com a estrutura esperada.');
+
     const response = await request.get('/posts/1');
     expect(response.status()).toBe(200);
 
@@ -25,6 +43,12 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts → todos os posts têm userId', async ({ request }) => {
+    allure.story('Validação de estrutura');
+    allure.severity('normal');
+    allure.tag('regression');
+    allure.tag('GET');
+    allure.description('Garante que todos os posts retornados possuem o campo userId do tipo número.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
     const posts = await response.json();
@@ -36,11 +60,23 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts/101 → post inexistente retorna 404', async ({ request }) => {
+    allure.story('Tratamento de erro');
+    allure.severity('critical');
+    allure.tag('negative');
+    allure.tag('GET');
+    allure.description('Valida que requisição para post inexistente retorna status 404.');
+
     const response = await request.get('/posts/101');
     expect(response.status()).toBe(404);
   });
 
   test('GET /posts → deve ter títulos únicos', async ({ request }) => {
+    allure.story('Validação de unicidade');
+    allure.severity('normal');
+    allure.tag('regression');
+    allure.tag('GET');
+    allure.description('Verifica que não há duplicação de títulos entre os 100 posts.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
     const posts = await response.json();
@@ -51,6 +87,12 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts → deve ter corpos de texto', async ({ request }) => {
+    allure.story('Validação de conteúdo');
+    allure.severity('minor');
+    allure.tag('regression');
+    allure.tag('GET');
+    allure.description('Garante que todos os posts possuem corpo (body) com conteúdo significativo.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
     const posts = await response.json();
@@ -62,6 +104,12 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts → validação de schema completo', async ({ request }) => {
+    allure.story('Validação de schema');
+    allure.severity('critical');
+    allure.tag('contract');
+    allure.tag('GET');
+    allure.description('Valida o contrato completo da API: presença e tipagem de todos os campos obrigatórios.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
     const posts = await response.json();
@@ -80,6 +128,12 @@ test.describe('📝 Posts API', () => {
   });
 
   test('GET /posts → posts agrupados por userId', async ({ request }) => {
+    allure.story('Análise de dados');
+    allure.severity('minor');
+    allure.tag('regression');
+    allure.tag('GET');
+    allure.description('Valida a distribuição esperada: 10 usuários com 10 posts cada.');
+
     const api = createApiHelper(request);
     const response = await api.getPosts(100);
     const posts = await response.json();
